@@ -26,7 +26,7 @@ let levelsData = [
     }
 ];
 
-// -------------------- ПОДГРУЗКА ИЗ localStorage --------------------
+// -------------------- ПОДГРУЗКА --------------------
 let savedLevels = JSON.parse(localStorage.getItem("levelsData"));
 
 if (savedLevels) {
@@ -255,7 +255,7 @@ function deleteLevel(i) {
     loadLevelsAdmin();
 }
 
-// -------------------- МУЗЫКА --------------------
+// -------------------- МУЗЫКА (ИСПРАВЛЕНО) --------------------
 document.addEventListener("DOMContentLoaded", function () {
     let music = document.getElementById("bg-music");
     let musicBtn = document.getElementById("music-btn");
@@ -264,24 +264,41 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let state = localStorage.getItem("musicState") || "on";
 
-    if (state === "on") {
-        music.play().catch(() => {});
-        musicBtn.innerText = "🔊 ON";
-    } else {
-        music.pause();
-        musicBtn.innerText = "🔇 OFF";
+    function updateButton() {
+        musicBtn.innerText = music.paused ? "🔇 OFF" : "🔊 ON";
     }
+
+    if (state === "on") {
+        music.volume = 0.5;
+
+        let playPromise = music.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(() => {
+                console.log("Автозапуск заблокирован");
+            });
+        }
+    }
+
+    updateButton();
+
+    function startMusicOnce() {
+        if (state === "on" && music.paused) {
+            music.play().catch(() => {});
+        }
+        document.body.removeEventListener("click", startMusicOnce);
+    }
+
+    document.body.addEventListener("click", startMusicOnce);
 
     window.toggleMusic = function () {
         if (music.paused) {
-            music.play();
-            musicBtn.innerText = "🔊 ON";
+            music.play().catch(() => {});
             localStorage.setItem("musicState", "on");
         } else {
             music.pause();
-            musicBtn.innerText = "🔇 OFF";
             localStorage.setItem("musicState", "off");
         }
+        updateButton();
     };
 });
 
