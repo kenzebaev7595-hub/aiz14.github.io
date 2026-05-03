@@ -1,15 +1,46 @@
 // -------------------- ИГРОВОЙ СТАТУС --------------------
-let level = 1;          // при новой игре уровень всегда 1
-let points = 0;         // при новой игре очки 0
-let attempts = 0;       // всего попыток
-let wrongStreak = 0;    // подряд неправильных ответов
+let level = 1;
+let points = 0;
+let attempts = 0;
+let wrongStreak = 0;
+
+// -------------------- УРОВНИ (БАЗА) --------------------
+let levelsData = [
+    {
+        task: "(x + 120) × 3 − 450 = 150",
+        answer: 80,
+        storyKZ: "Шкаф нөмірін табыңыз",
+        storyRU: "Найдите номер шкафчика"
+    },
+    {
+        task: "12 км/ч и 15 км/ч, встретились через 3 часа. Найдите расстояние",
+        answer: 81,
+        storyKZ: "Арақашықтықты табыңыз",
+        storyRU: "Найдите расстояние"
+    },
+    {
+        task: "2500 -20% -10%",
+        answer: 1800,
+        storyKZ: "Соңғы бағаны табыңыз",
+        storyRU: "Найдите итоговую цену"
+    }
+];
+
+// -------------------- ПОДГРУЗКА ИЗ localStorage --------------------
+let savedLevels = JSON.parse(localStorage.getItem("levelsData"));
+
+if (savedLevels) {
+    levelsData = savedLevels;
+} else {
+    localStorage.setItem("levelsData", JSON.stringify(levelsData));
+}
 
 // -------------------- РЕГИСТРАЦИЯ --------------------
 function saveUser(username, password) {
     let users = JSON.parse(localStorage.getItem("users")) || [];
 
     if (users.find(u => u.username === username)) {
-        alert("❌ Такой пользователь уже зарегистрирован!");
+        alert("❌ Такой пользователь уже есть!");
         return;
     }
 
@@ -24,7 +55,6 @@ function saveUser(username, password) {
 function loginUser(username, password) {
     let users = JSON.parse(localStorage.getItem("users")) || [];
 
-    // вход администратора
     if (username === "admin" && password === "1234") {
         window.location.href = "admin.html";
         return;
@@ -38,20 +68,16 @@ function loginUser(username, password) {
         localStorage.setItem("currentUser", username);
         startNewGame();
     } else {
-        alert("❌ Неверный логин или пароль!");
+        alert("❌ Ошибка входа");
     }
 }
 
-// -------------------- НАЧАЛО НОВОЙ ИГРЫ --------------------
+// -------------------- НОВАЯ ИГРА --------------------
 function startNewGame() {
     level = 1;
     points = 0;
     attempts = 0;
     wrongStreak = 0;
-
-    localStorage.setItem("level", level);
-    localStorage.setItem("points", points);
-    localStorage.setItem("attempts", attempts);
 
     window.location.href = "game.html";
 }
@@ -72,30 +98,7 @@ function saveLog(answer, correct) {
     localStorage.setItem("logs", JSON.stringify(logs));
 }
 
-// -------------------- УРОВНИ И ПРЕДЫСТОРИЯ --------------------
-const levelsData = [
-    {
-        task: "На месте преступления детектив нашёл записку: (x + 120) × 3 − 450 = 150. Найдите x — это номер шкафчика, где спрятана первая улика.",
-        answer: 80,
-        storyKZ: "Мистер Виллидің алтын рецептін ұрлаған адамды табу үшін алдымен жасырылған дәлелді табу керек. Шкаф нөмірін есептеңіз.",
-        storyRU: "Чтобы раскрыть кражу золотого рецепта мистера Вилли, нужно сначала найти спрятанную улику. Решите уравнение и узнайте номер шкафчика."
-    },
-
-    {
-        task: "Два подозреваемых одновременно вышли навстречу друг другу из разных точек города. Первый двигался со скоростью 12 км/ч, второй — 15 км/ч. Через 3 часа они встретились. Какое расстояние было между ними изначально?",
-        answer: 81,
-        storyKZ: "Куәгерлер екі күдіктінің қозғалысын байқады. Олардың бастапқы арақашықтығын есептеп, кездескен орынды анықтаңыз.",
-        storyRU: "Свидетели заметили движение двух подозреваемых. Рассчитайте расстояние между ними, чтобы определить место встречи."
-    },
-
-    {
-        task: "В антикварном магазине украли редкую книгу. Её цена была 2500 тг. Сначала на неё сделали скидку 20%, а затем ещё 10%. Найдите итоговую стоимость — именно за эту сумму её продали на чёрном рынке.",
-        answer: 1800,
-        storyKZ: "Ұрланған сирек кітаптың нақты сатылған бағасын анықтау керек. Жеңілдіктерді есептеп, соңғы ізге шығыңыз.",
-        storyRU: "Нужно выяснить реальную стоимость украденной редкой книги. Рассчитайте скидки и найдите последнюю зацепку в расследовании."
-    }
-];
-
+// -------------------- ЯЗЫК --------------------
 let currentLang = localStorage.getItem("lang") || "ru";
 
 function setLang(lang) {
@@ -104,36 +107,37 @@ function setLang(lang) {
     showTask();
 }
 
-// -------------------- ПОКАЗ ЗАДАЧИ --------------------
+// -------------------- ПОКАЗ ЗАДАЧ --------------------
 function showTask() {
-    if (level - 1 < levelsData.length) {
+    let levels = JSON.parse(localStorage.getItem("levelsData")) || levelsData;
+
+    if (level - 1 < levels.length) {
         document.getElementById("task").innerText =
-            levelsData[level - 1].task;
+            levels[level - 1].task;
 
         document.getElementById("story").innerText =
             currentLang === "kz"
-                ? levelsData[level - 1].storyKZ
-                : levelsData[level - 1].storyRU;
+                ? levels[level - 1].storyKZ
+                : levels[level - 1].storyRU;
 
         document.getElementById("answer").value = "";
         document.getElementById("points").innerText = points;
         document.getElementById("wrongStreak").innerText = wrongStreak;
 
     } else {
-        localStorage.setItem("points", points);
-        localStorage.setItem("attempts", attempts);
         window.location.href = "victory.html";
     }
 }
 
-// -------------------- ОТВЕТ ПОЛЬЗОВАТЕЛЯ --------------------
+// -------------------- ОТВЕТ --------------------
 function submitAnswer() {
-    let answerInput = document.getElementById("answer");
-    let userAnswer = Number(answerInput.value);
+    let levels = JSON.parse(localStorage.getItem("levelsData")) || levelsData;
+
+    let userAnswer = Number(document.getElementById("answer").value);
 
     attempts++;
 
-    if (userAnswer === levelsData[level - 1].answer) {
+    if (userAnswer === levels[level - 1].answer) {
         points += 400;
         wrongStreak = 0;
 
@@ -141,7 +145,7 @@ function submitAnswer() {
 
         level++;
 
-        alert("✅ Правильно! +400 очков, переход на следующий уровень");
+        alert("✅ Правильно!");
 
     } else {
         if (points > 0) {
@@ -154,17 +158,9 @@ function submitAnswer() {
 
         saveLog(userAnswer, false);
 
-        alert(
-            `❌ Неверно! ${
-                points < 0
-                    ? "-100 очков"
-                    : "Очки сброшены до 0"
-            }`
-        );
+        alert("❌ Неверно!");
 
         if (wrongStreak >= 3) {
-            localStorage.setItem("points", points);
-            localStorage.setItem("attempts", attempts);
             window.location.href = "defeat.html";
             return;
         }
@@ -173,7 +169,7 @@ function submitAnswer() {
     showTask();
 }
 
-// -------------------- АДМИН --------------------
+// -------------------- АДМИН: ЛОГИ --------------------
 function loadAdmin() {
     let logs = JSON.parse(localStorage.getItem("logs")) || [];
     let container = document.getElementById("logs");
@@ -183,11 +179,11 @@ function loadAdmin() {
     logs.forEach(l => {
         container.innerHTML += `
             <div class="card">
-                👤 Пользователь: ${l.user}<br>
-                🎯 Уровень: ${l.level}<br>
-                ✏️ Ответ: ${l.answer}<br>
-                📊 ${l.correct ? "✅ Правильно" : "❌ Неправильно"}<br>
-                🕒 Время: ${l.time}
+                👤 ${l.user}<br>
+                🎯 ${l.level}<br>
+                ✏️ ${l.answer}<br>
+                ${l.correct ? "✅" : "❌"}<br>
+                🕒 ${l.time}
             </div>
         `;
     });
@@ -196,6 +192,67 @@ function loadAdmin() {
 function clearLogs() {
     localStorage.removeItem("logs");
     location.reload();
+}
+
+// -------------------- АДМИН: УРОВНИ --------------------
+function loadLevelsAdmin() {
+    let levels = JSON.parse(localStorage.getItem("levelsData")) || [];
+    let container = document.getElementById("levels");
+
+    container.innerHTML = "";
+
+    levels.forEach((lvl, i) => {
+        container.innerHTML += `
+            <div class="card">
+                <h3>Уровень ${i + 1}</h3>
+
+                <textarea id="task-${i}">${lvl.task}</textarea><br>
+                <input type="number" id="answer-${i}" value="${lvl.answer}"><br>
+
+                <textarea id="storyRU-${i}">${lvl.storyRU}</textarea><br>
+                <textarea id="storyKZ-${i}">${lvl.storyKZ}</textarea><br>
+
+                <button onclick="saveLevel(${i})">💾</button>
+                <button onclick="deleteLevel(${i})">❌</button>
+            </div>
+        `;
+    });
+}
+
+function saveLevel(i) {
+    let levels = JSON.parse(localStorage.getItem("levelsData")) || [];
+
+    levels[i].task = document.getElementById(`task-${i}`).value;
+    levels[i].answer = Number(document.getElementById(`answer-${i}`).value);
+    levels[i].storyRU = document.getElementById(`storyRU-${i}`).value;
+    levels[i].storyKZ = document.getElementById(`storyKZ-${i}`).value;
+
+    localStorage.setItem("levelsData", JSON.stringify(levels));
+
+    alert("Сохранено!");
+}
+
+function addLevel() {
+    let levels = JSON.parse(localStorage.getItem("levelsData")) || [];
+
+    levels.push({
+        task: "Новая задача",
+        answer: 0,
+        storyRU: "Описание",
+        storyKZ: "Сипаттама"
+    });
+
+    localStorage.setItem("levelsData", JSON.stringify(levels));
+    loadLevelsAdmin();
+}
+
+function deleteLevel(i) {
+    let levels = JSON.parse(localStorage.getItem("levelsData")) || [];
+
+    levels.splice(i, 1);
+
+    localStorage.setItem("levelsData", JSON.stringify(levels));
+    loadLevelsAdmin();
 }
 
 // -------------------- МУЗЫКА --------------------
@@ -229,4 +286,8 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // -------------------- ЗАПУСК --------------------
-document.addEventListener("DOMContentLoaded", showTask);
+document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById("task")) showTask();
+    if (document.getElementById("logs")) loadAdmin();
+    if (document.getElementById("levels")) loadLevelsAdmin();
+});
