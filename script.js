@@ -4,8 +4,8 @@ let points = 0;
 let attempts = 0;
 let wrongStreak = 0;
 
-// -------------------- URL GOOGLE SHEETS --------------------
-const scriptURL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnT7LsmnK3gkmqJVOoM9WmfFat_yWXzEUfUwwwmD13vTzq5f5pZH0I_DJhMxHvBvOJPLFWW87X3C5aoGdPnOH0nJzLDEsos3VgKY4zN49kEHK8JPLPJGTeAoC5on8ou2DQvOcDsBAyugvsuFMnCNqgIJk1nUWcO5nqJ8p2u9f6reGZfAwGvR4BD2rOCRneC2PfZc-p9OZnq1SQG4y7jaMBuX-MekSQYnnzp7TZFM6Roj5gbnNg-4kcuN7gNS4Dg8tU-VgY_atn_RpYwxN9cMi9BM9yBAHA&lib=M8YbpbTcjksLagrrDY7nWWw9spX67NC7o"; // <-- вставь сюда Web App URL
+// -------------------- GOOGLE APPS SCRIPT URL --------------------
+const scriptURL = "https://script.google.com/macros/s/AKfycbw30Xl-NJjrUFrxfWp2KhoLVyY1QWdRPHz2ZzkVi98szoWD_H8jgVUeUjm5qq9icGQ/exec";
 
 // -------------------- УРОВНИ --------------------
 let levelsData = [
@@ -38,7 +38,7 @@ if (savedLevels) {
     localStorage.setItem("levelsData", JSON.stringify(levelsData));
 }
 
-// -------------------- РЕГИСТРАЦИЯ --------------------
+// -------------------- REGISTRATION --------------------
 function saveUser(username, password) {
     let users = JSON.parse(localStorage.getItem("users")) || [];
 
@@ -54,7 +54,7 @@ function saveUser(username, password) {
     window.location.href = "index.html";
 }
 
-// -------------------- ВХОД --------------------
+// -------------------- LOGIN --------------------
 function loginUser(username, password) {
     let users = JSON.parse(localStorage.getItem("users")) || [];
 
@@ -63,9 +63,7 @@ function loginUser(username, password) {
         return;
     }
 
-    let user = users.find(
-        u => u.username === username && u.password === password
-    );
+    let user = users.find(u => u.username === username && u.password === password);
 
     if (user) {
         localStorage.setItem("currentUser", username);
@@ -75,17 +73,16 @@ function loginUser(username, password) {
     }
 }
 
-// -------------------- НОВАЯ ИГРА --------------------
+// -------------------- NEW GAME --------------------
 function startNewGame() {
     level = 1;
     points = 0;
     attempts = 0;
     wrongStreak = 0;
-
     window.location.href = "game.html";
 }
 
-// -------------------- ЛОГИ + ОТПРАВКА --------------------
+// -------------------- SAVE LOG (FIXED) --------------------
 function saveLog(answer, correct) {
     let username = localStorage.getItem("currentUser") || "guest";
     let logs = JSON.parse(localStorage.getItem("logs")) || [];
@@ -98,23 +95,24 @@ function saveLog(answer, correct) {
         time: new Date().toLocaleString()
     };
 
-    // локально
+    // localStorage
     logs.push(logData);
     localStorage.setItem("logs", JSON.stringify(logs));
 
-    // отправка в Google Sheets
+    // Google Sheets
     fetch(scriptURL, {
         method: "POST",
         body: JSON.stringify(logData),
+        mode: "no-cors",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "text/plain"
         }
-    })
-    .then(() => console.log("✅ Отправлено в Google Sheets"))
-    .catch(err => console.error("❌ Ошибка отправки:", err));
+    });
+
+    console.log("📤 Log sent:", logData);
 }
 
-// -------------------- ЯЗЫК --------------------
+// -------------------- LANGUAGE --------------------
 let currentLang = localStorage.getItem("lang") || "ru";
 
 function setLang(lang) {
@@ -123,7 +121,7 @@ function setLang(lang) {
     showTask();
 }
 
-// -------------------- ПОКАЗ ЗАДАЧ --------------------
+// -------------------- SHOW TASK --------------------
 function showTask() {
     let levels = JSON.parse(localStorage.getItem("levelsData")) || levelsData;
 
@@ -143,10 +141,9 @@ function showTask() {
     }
 }
 
-// -------------------- ОТВЕТ --------------------
+// -------------------- SUBMIT ANSWER --------------------
 function submitAnswer() {
     let levels = JSON.parse(localStorage.getItem("levelsData")) || levelsData;
-
     let userAnswer = Number(document.getElementById("answer").value);
 
     attempts++;
@@ -154,23 +151,15 @@ function submitAnswer() {
     if (userAnswer === levels[level - 1].answer) {
         points += 400;
         wrongStreak = 0;
-
         saveLog(userAnswer, true);
-
         level++;
-
         alert("✅ Правильно!");
     } else {
-        if (points > 0) {
-            points = 0;
-        } else {
-            points -= 100;
-        }
+        if (points > 0) points = 0;
+        else points -= 100;
 
         wrongStreak++;
-
         saveLog(userAnswer, false);
-
         alert("❌ Неверно!");
 
         if (wrongStreak >= 3) {
@@ -182,7 +171,7 @@ function submitAnswer() {
     showTask();
 }
 
-// -------------------- АДМИН: ЛОГИ --------------------
+// -------------------- ADMIN LOGS --------------------
 function loadAdmin() {
     let logs = JSON.parse(localStorage.getItem("logs")) || [];
     let container = document.getElementById("logs");
@@ -191,13 +180,13 @@ function loadAdmin() {
 
     logs.forEach(l => {
         container.innerHTML += `
-            <div class="card">
-                👤 ${l.user}<br>
-                🎯 ${l.level}<br>
-                ✏️ ${l.answer}<br>
-                ${l.correct ? "✅" : "❌"}<br>
-                🕒 ${l.time}
-            </div>
+        <div class="card">
+            👤 ${l.user}<br>
+            🎯 ${l.level}<br>
+            ✏️ ${l.answer}<br>
+            ${l.correct ? "✅" : "❌"}<br>
+            🕒 ${l.time}
+        </div>
         `;
     });
 }
@@ -207,7 +196,7 @@ function clearLogs() {
     location.reload();
 }
 
-// -------------------- АДМИН: УРОВНИ --------------------
+// -------------------- ADMIN LEVELS --------------------
 function loadLevelsAdmin() {
     let levels = JSON.parse(localStorage.getItem("levelsData")) || [];
     let container = document.getElementById("levels");
@@ -216,18 +205,18 @@ function loadLevelsAdmin() {
 
     levels.forEach((lvl, i) => {
         container.innerHTML += `
-            <div class="card">
-                <h3>Уровень ${i + 1}</h3>
+        <div class="card">
+            <h3>Уровень ${i + 1}</h3>
 
-                <textarea id="task-${i}">${lvl.task}</textarea><br>
-                <input type="number" id="answer-${i}" value="${lvl.answer}"><br>
+            <textarea id="task-${i}">${lvl.task}</textarea><br>
+            <input type="number" id="answer-${i}" value="${lvl.answer}"><br>
 
-                <textarea id="storyRU-${i}">${lvl.storyRU}</textarea><br>
-                <textarea id="storyKZ-${i}">${lvl.storyKZ}</textarea><br>
+            <textarea id="storyRU-${i}">${lvl.storyRU}</textarea><br>
+            <textarea id="storyKZ-${i}">${lvl.storyKZ}</textarea><br>
 
-                <button onclick="saveLevel(${i})">💾</button>
-                <button onclick="deleteLevel(${i})">❌</button>
-            </div>
+            <button onclick="saveLevel(${i})">💾</button>
+            <button onclick="deleteLevel(${i})">❌</button>
+        </div>
         `;
     });
 }
@@ -241,7 +230,6 @@ function saveLevel(i) {
     levels[i].storyKZ = document.getElementById(`storyKZ-${i}`).value;
 
     localStorage.setItem("levelsData", JSON.stringify(levels));
-
     alert("Сохранено!");
 }
 
@@ -261,14 +249,47 @@ function addLevel() {
 
 function deleteLevel(i) {
     let levels = JSON.parse(localStorage.getItem("levelsData")) || [];
-
     levels.splice(i, 1);
-
     localStorage.setItem("levelsData", JSON.stringify(levels));
     loadLevelsAdmin();
 }
 
-// -------------------- ЗАПУСК --------------------
+// -------------------- MUSIC (FIXED FOR GITHUB) --------------------
+document.addEventListener("DOMContentLoaded", function () {
+    let music = document.getElementById("bg-music");
+    let musicBtn = document.getElementById("music-btn");
+
+    if (!music || !musicBtn) return;
+
+    let state = localStorage.getItem("musicState") || "off";
+
+    function updateUI() {
+        musicBtn.innerText = music.paused ? "🔇 OFF" : "🔊 ON";
+    }
+
+    musicBtn.addEventListener("click", () => {
+        if (music.paused) {
+            music.play().catch(() => {});
+            localStorage.setItem("musicState", "on");
+        } else {
+            music.pause();
+            localStorage.setItem("musicState", "off");
+        }
+        updateUI();
+    });
+
+    if (state === "on") {
+        document.body.addEventListener("click", function startOnce() {
+            music.play().catch(() => {});
+            updateUI();
+            document.body.removeEventListener("click", startOnce);
+        });
+    }
+
+    updateUI();
+});
+
+// -------------------- INIT --------------------
 document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("task")) showTask();
     if (document.getElementById("logs")) loadAdmin();
