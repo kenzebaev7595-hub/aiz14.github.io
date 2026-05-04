@@ -1,22 +1,25 @@
+// -------------------- FIREBASE --------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyDu2ioUgqEKB63EkiMrQ6w4NDbkFtoYuWk",
+  authDomain: "aizana.firebaseapp.com",
+  projectId: "aizana",
+  storageBucket: "aizana.firebasestorage.app",
+  messagingSenderId: "943216648093",
+  appId: "1:943216648093:web:024cb57c57d15aef735974",
+  measurementId: "G-Q0G5PPWBD8"
+};
+
+// init firebase (ТОЛЬКО ОДИН РАЗ!)
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+
 // -------------------- ИГРОВОЙ СТАТУС --------------------
 let level = 1;
 let points = 0;
 let attempts = 0;
 let wrongStreak = 0;
 
-// -------------------- FIREBASE --------------------
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "XXXX",
-    appId: "XXXX"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 
 // -------------------- УРОВНИ --------------------
 let levelsData = [
@@ -40,7 +43,6 @@ let levelsData = [
     }
 ];
 
-// -------------------- LOCAL STORAGE --------------------
 let savedLevels = JSON.parse(localStorage.getItem("levelsData"));
 
 if (savedLevels) {
@@ -48,6 +50,7 @@ if (savedLevels) {
 } else {
     localStorage.setItem("levelsData", JSON.stringify(levelsData));
 }
+
 
 // -------------------- РЕГИСТРАЦИЯ --------------------
 function saveUser(username, password) {
@@ -64,6 +67,7 @@ function saveUser(username, password) {
     alert("✅ Регистрация успешна!");
     window.location.href = "index.html";
 }
+
 
 // -------------------- ВХОД --------------------
 function loginUser(username, password) {
@@ -84,6 +88,7 @@ function loginUser(username, password) {
     }
 }
 
+
 // -------------------- НОВАЯ ИГРА --------------------
 function startNewGame() {
     level = 1;
@@ -94,20 +99,20 @@ function startNewGame() {
     window.location.href = "game.html";
 }
 
+
 // -------------------- ЛОГИ (FIREBASE) --------------------
 function saveLog(answer, correct) {
     let username = localStorage.getItem("currentUser") || "guest";
 
-    let logData = {
+    db.ref("logs").push({
         user: username,
         level: level,
         answer: answer,
         correct: correct,
         time: new Date().toLocaleString()
-    };
-
-    db.ref("logs").push(logData);
+    });
 }
+
 
 // -------------------- ЯЗЫК --------------------
 let currentLang = localStorage.getItem("lang") || "ru";
@@ -117,6 +122,7 @@ function setLang(lang) {
     localStorage.setItem("lang", lang);
     showTask();
 }
+
 
 // -------------------- ПОКАЗ ЗАДАЧ --------------------
 function showTask() {
@@ -137,6 +143,7 @@ function showTask() {
         window.location.href = "victory.html";
     }
 }
+
 
 // -------------------- ОТВЕТ --------------------
 function submitAnswer() {
@@ -170,6 +177,7 @@ function submitAnswer() {
     showTask();
 }
 
+
 // -------------------- АДМИН: ЛОГИ --------------------
 function loadAdmin() {
     let container = document.getElementById("logs");
@@ -195,6 +203,7 @@ function loadAdmin() {
     });
 }
 
+
 // -------------------- УРОВНИ АДМИН --------------------
 function loadLevelsAdmin() {
     let levels = JSON.parse(localStorage.getItem("levelsData")) || [];
@@ -212,13 +221,11 @@ function loadLevelsAdmin() {
 
                 <textarea id="storyRU-${i}">${lvl.storyRU}</textarea><br>
                 <textarea id="storyKZ-${i}">${lvl.storyKZ}</textarea><br>
-
-                <button onclick="saveLevel(${i})">💾</button>
-                <button onclick="deleteLevel(${i})">❌</button>
             </div>
         `;
     });
 }
+
 
 // -------------------- ЗАПУСК --------------------
 document.addEventListener("DOMContentLoaded", () => {
@@ -226,6 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("logs")) loadAdmin();
     if (document.getElementById("levels")) loadLevelsAdmin();
 });
+
 
 // -------------------- МУЗЫКА --------------------
 let music = document.getElementById("bg-music");
@@ -240,7 +248,7 @@ function toggleMusic() {
         music.play().then(() => {
             isPlaying = true;
             btn.innerText = "🔊 OFF";
-        }).catch(err => console.log(err));
+        });
 
     } else {
         music.pause();
@@ -249,7 +257,8 @@ function toggleMusic() {
     }
 }
 
-// автозапуск после клика
+
+// автозапуск после первого клика
 document.addEventListener("click", function startMusicOnce() {
     if (!isPlaying && music) {
         music.volume = 0.3;
