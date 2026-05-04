@@ -4,7 +4,10 @@ let points = 0;
 let attempts = 0;
 let wrongStreak = 0;
 
-// -------------------- УРОВНИ (БАЗА) --------------------
+// -------------------- URL GOOGLE SHEETS --------------------
+const scriptURL = "ВСТАВЬ_СЮДА_URL"; // <-- вставь сюда Web App URL
+
+// -------------------- УРОВНИ --------------------
 let levelsData = [
     {
         task: "(x + 120) × 3 − 450 = 150",
@@ -26,7 +29,7 @@ let levelsData = [
     }
 ];
 
-// -------------------- ПОДГРУЗКА --------------------
+// -------------------- LOCAL STORAGE --------------------
 let savedLevels = JSON.parse(localStorage.getItem("levelsData"));
 
 if (savedLevels) {
@@ -82,20 +85,33 @@ function startNewGame() {
     window.location.href = "game.html";
 }
 
-// -------------------- ЛОГИ --------------------
+// -------------------- ЛОГИ + ОТПРАВКА --------------------
 function saveLog(answer, correct) {
     let username = localStorage.getItem("currentUser") || "guest";
     let logs = JSON.parse(localStorage.getItem("logs")) || [];
 
-    logs.push({
+    let logData = {
         user: username,
         level: level,
         answer: answer,
         correct: correct,
         time: new Date().toLocaleString()
-    });
+    };
 
+    // локально
+    logs.push(logData);
     localStorage.setItem("logs", JSON.stringify(logs));
+
+    // отправка в Google Sheets
+    fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify(logData),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    })
+    .then(() => console.log("✅ Отправлено в Google Sheets"))
+    .catch(err => console.error("❌ Ошибка отправки:", err));
 }
 
 // -------------------- ЯЗЫК --------------------
@@ -112,8 +128,7 @@ function showTask() {
     let levels = JSON.parse(localStorage.getItem("levelsData")) || levelsData;
 
     if (level - 1 < levels.length) {
-        document.getElementById("task").innerText =
-            levels[level - 1].task;
+        document.getElementById("task").innerText = levels[level - 1].task;
 
         document.getElementById("story").innerText =
             currentLang === "kz"
@@ -123,7 +138,6 @@ function showTask() {
         document.getElementById("answer").value = "";
         document.getElementById("points").innerText = points;
         document.getElementById("wrongStreak").innerText = wrongStreak;
-
     } else {
         window.location.href = "victory.html";
     }
@@ -146,7 +160,6 @@ function submitAnswer() {
         level++;
 
         alert("✅ Правильно!");
-
     } else {
         if (points > 0) {
             points = 0;
@@ -254,53 +267,6 @@ function deleteLevel(i) {
     localStorage.setItem("levelsData", JSON.stringify(levels));
     loadLevelsAdmin();
 }
-
-// -------------------- МУЗЫКА (ИСПРАВЛЕНО) --------------------
-document.addEventListener("DOMContentLoaded", function () {
-    let music = document.getElementById("bg-music");
-    let musicBtn = document.getElementById("music-btn");
-
-    if (!music || !musicBtn) return;
-
-    let state = localStorage.getItem("musicState") || "on";
-
-    function updateButton() {
-        musicBtn.innerText = music.paused ? "🔇 OFF" : "🔊 ON";
-    }
-
-    if (state === "on") {
-        music.volume = 0.5;
-
-        let playPromise = music.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(() => {
-                console.log("Автозапуск заблокирован");
-            });
-        }
-    }
-
-    updateButton();
-
-    function startMusicOnce() {
-        if (state === "on" && music.paused) {
-            music.play().catch(() => {});
-        }
-        document.body.removeEventListener("click", startMusicOnce);
-    }
-
-    document.body.addEventListener("click", startMusicOnce);
-
-    window.toggleMusic = function () {
-        if (music.paused) {
-            music.play().catch(() => {});
-            localStorage.setItem("musicState", "on");
-        } else {
-            music.pause();
-            localStorage.setItem("musicState", "off");
-        }
-        updateButton();
-    };
-});
 
 // -------------------- ЗАПУСК --------------------
 document.addEventListener("DOMContentLoaded", () => {
