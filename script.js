@@ -5,7 +5,7 @@ let attempts = 0;
 let wrongStreak = 0;
 
 // -------------------- URL GOOGLE SHEETS --------------------
-const scriptURL = "ВСТАВЬ_СЮДА_URL"; // <-- вставь сюда Web App URL
+const scriptURL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnT7LsmnK3gkmqJVOoM9WmfFat_yWXzEUfUwwwmD13vTzq5f5pZH0I_DJhMxHvBvOJPLFWW87X3C5aoGdPnOH0nJzLDEsos3VgKY4zN49kEHK8JPLPJGTeAoC5on8ou2DQvOcDsBAyugvsuFMnCNqgIJk1nUWcO5nqJ8p2u9f6reGZfAwGvR4BD2rOCRneC2PfZc-p9OZnq1SQG4y7jaMBuX-MekSQYnnzp7TZFM6Roj5gbnNg-4kcuN7gNS4Dg8tU-VgY_atn_RpYwxN9cMi9BM9yBAHA&lib=M8YbpbTcjksLagrrDY7nWWw9spX67NC7o"; // <-- вставь сюда Web App URL
 
 // -------------------- УРОВНИ --------------------
 let levelsData = [
